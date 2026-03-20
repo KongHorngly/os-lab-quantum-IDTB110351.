@@ -1,0 +1,38 @@
+username=$1
+quantity=$2
+
+if ! [[ "$quantity" =~ ^[0-9]+$ ]] || [ "$quantity" -le 0 ]; then
+    echo "Error: Quantity must be a positive integer"
+    exit 1
+fi
+
+log_transaction() {
+    echo "[110351] [SUCCESS] $username bought $quantity widgets" >> sales.l>
+}
+
+current_inventory=$(<inventory.txt)
+current_inventory=${current_inventory:-0}
+if [ "$quantity" -le "$current_inventory" ]; then
+    new_inventory=$((current_inventory - quantity))
+    echo "$new_inventory" > inventory.txt
+    log_transaction
+    echo "Transaction successful!"
+else
+    echo "Transaction Failed: Not enough inventory!"
+fi
+
+(
+  flock -x 200
+
+  current_inventory=$(cat inventory.txt)
+
+  if [ "$quantity" -le "$current_inventory" ]; then
+      new_inventory=$((current_inventory - quantity))
+      echo "$new_inventory" > inventory.txt
+      log_transaction
+      echo "Transaction successful!"
+  else
+      echo "Transaction Failed: Not enough inventory!"
+  fi
+
+) 200>inventory.lock

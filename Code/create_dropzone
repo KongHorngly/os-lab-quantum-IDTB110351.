@@ -1,0 +1,10 @@
+#!/bin/bash
+
+read -p "Enter dropzone name: " folder
+
+mkdir -p ~/"$folder"
+
+chmod o+wx ~/"$folder"
+chmod +t ~/"$folder"
+
+echo "Secure dropzone created: $folder"
